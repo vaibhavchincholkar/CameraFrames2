@@ -70,7 +70,6 @@ public class MainActivity extends AppCompatActivity {
     private HandlerThread mCheckThread;
     private Handler mCheckHandler;
     int cnt=0;
-    private ImageView imageView;
     GLSurfaceView mGLView;
     FrameLayout fm;
     @Override
@@ -81,16 +80,12 @@ public class MainActivity extends AppCompatActivity {
         mGLView.setEGLConfigChooser(8,8,8,8,16,0);
         mGLView.setEGLContextClientVersion(2);
         mGLView.setRenderer(new MyGLRenderer(this));
-        // mGLView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
         mGLView.setZOrderOnTop(true);
         mGLView.getHolder().setFormat(PixelFormat.TRANSLUCENT);
-       //mGLView.setLayerType(View.LAYER_TYPE_SOFTWARE,null);
-
+        mGLView.setLayerType(View.LAYER_TYPE_SOFTWARE,null);
         //addContentView(mGLView,lp);
+        //GlView will be added to fm onResume method
         fm= findViewById(R.id.mainFrameLayout);
-        //fm.addView(mGLView,new ViewGroup.LayoutParams(480,480));
-        mGLView.onResume();
-
         textureView =  findViewById(R.id.texture);
         textureView.setSurfaceTextureListener(textureListener);
         mCheckThread = new HandlerThread("CheckHandler");
@@ -98,58 +93,26 @@ public class MainActivity extends AppCompatActivity {
         mCheckHandler = new Handler(mCheckThread.getLooper());
     }
 
-
-
     TextureView.SurfaceTextureListener textureListener = new TextureView.SurfaceTextureListener() {
         @Override
         public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int i, int i1) {
             //open your camera here
             openCamera();
-
         }
-
         @Override
         public void onSurfaceTextureSizeChanged(SurfaceTexture surfaceTexture, int i, int i1) {
-
         }
-
         @Override
         public boolean onSurfaceTextureDestroyed(SurfaceTexture surfaceTexture) {
             return false;
         }
-
         @Override
         public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture) {
-
-           // mGLView.getHolder().unlockCanvasAndPost(c);
-          /*  Bitmap bt =  (Bitmap) textureView.getBitmap();
-
-            //File folder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES));
-            File myFile = new File(getExternalFilesDir("NPP"), "vaibhav"+cnt+".jpg");
-
-            cnt++;
-
-                 FileOutputStream fos = null;
-            try {
-                myFile.createNewFile();
-            fos = new FileOutputStream(myFile);
-            // Use the compress method on the BitMap object to write image to the OutputStream
-            bt.compress(Bitmap.CompressFormat.JPEG, 20, fos);
-            Log.d("vee","wrote");
-            } catch (Exception e) {
-            e.printStackTrace();
-            } finally {
-            try {
-                if(fos!=null) fos.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            }*/
         }
     };
+
     private void openCamera() {
         CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-        Log.e("MY LOG", "is camera open");
         try {
             cameraId = manager.getCameraIdList()[0];
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
@@ -302,10 +265,6 @@ public class MainActivity extends AppCompatActivity {
             cameraDevice.close();
             cameraDevice = null;
         }
-        /*if (null != imageReader) {
-            imageReader.close();
-            imageReader = null;
-        }*/
     }
     @Override
     protected void onResume() {

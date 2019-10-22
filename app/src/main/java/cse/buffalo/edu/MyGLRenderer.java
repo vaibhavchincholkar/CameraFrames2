@@ -1,6 +1,4 @@
 package cse.buffalo.edu;
-
-import android.app.Application;
 import android.content.Context;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
