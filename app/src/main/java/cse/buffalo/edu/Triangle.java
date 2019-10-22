@@ -2,6 +2,8 @@ package cse.buffalo.edu;
 
 import android.opengl.GLES20;
 import android.opengl.Matrix;
+import android.os.SystemClock;
+import android.util.Log;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -84,9 +86,9 @@ public class Triangle {
         // view matrix. In OpenGL 2, we can keep track of these matrices separately if we choose.
         Matrix.setLookAtM(mViewMatrix, 0, eyeX, eyeY, eyeZ, lookX, lookY, lookZ, upX, upY, upZ);
 
-      /*  int vertexShaderHandle = GLES20.glCreateShader(GLES20.GL_VERTEX_SHADER);
+        int vertexShaderHandle = GLES20.glCreateShader(GLES20.GL_VERTEX_SHADER);
 
-       /* if (vertexShaderHandle != 0)
+        if (vertexShaderHandle != 0)
         {
             // Pass in the shader source.
             GLES20.glShaderSource(vertexShaderHandle, vertexShader);
@@ -178,18 +180,32 @@ public class Triangle {
         mMVPMatrixHandle = GLES20.glGetUniformLocation(programHandle, "u_MVPMatrix");
         mPositionHandle = GLES20.glGetAttribLocation(programHandle, "a_Position");
         mColorHandle = GLES20.glGetAttribLocation(programHandle, "a_Color");
-
+        Log.e("veee","Program created");
         // Tell OpenGL to use this program when rendering.
-        GLES20.glUseProgram(programHandle);*/
+        GLES20.glUseProgram(programHandle);
     }
 
 
     public void draw() {
         // Add program to OpenGL ES environment
-       // GLES20.glUseProgram();
+        Log.d("veee","In draw");
+        long time = SystemClock.uptimeMillis() % 10000L;
+        float angleInDegrees = (360.0f / 10000.0f) * ((int) time);
         Matrix.setIdentityM(mModelMatrix, 0);
-       // Matrix.rotateM(mModelMatrix, 0, 0, 0.0f, 0.0f, 1.0f);
+        Matrix.rotateM(mModelMatrix, 0, 0, 0.0f, 0.0f, 1.0f);
+        Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 0.0f, 0.0f, 1.0f);
         drawTriangle(mTriangle1Vertices);
+    }
+    public void onsufchng(int width, int height){
+        final float ratio = (float) width / height;
+        final float left = -ratio;
+        final float right = ratio;
+        final float bottom = -1.0f;
+        final float top = 1.0f;
+        final float near = 1.0f;
+        final float far = 10.0f;
+
+        Matrix.frustumM(mProjectionMatrix, 0, left, right, bottom, top, near, far);
     }
     private void drawTriangle(final FloatBuffer aTriangleBuffer)
     {
@@ -216,5 +232,6 @@ public class Triangle {
 
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mMVPMatrix, 0);
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3);
+       // GLES20.glDisableVertexAttribArray(mPositionHandle);
     }
 }

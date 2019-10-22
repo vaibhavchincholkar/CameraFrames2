@@ -10,8 +10,10 @@ import android.content.ContextWrapper;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ImageFormat;
+import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.SurfaceTexture;
 import android.graphics.drawable.ColorDrawable;
@@ -51,6 +53,8 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
+import static cse.buffalo.edu.R.drawable.ic_launcher_foreground;
+
 public class MainActivity extends AppCompatActivity {
     private TextureView textureView;
     private String cameraId;
@@ -75,16 +79,18 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         mGLView = new GLSurfaceView(this);
         mGLView.setEGLConfigChooser(8,8,8,8,16,0);
-        mGLView.setRenderer(new MyGLRenderer());
+        mGLView.setEGLContextClientVersion(2);
+        mGLView.setRenderer(new MyGLRenderer(this));
         // mGLView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
         mGLView.setZOrderOnTop(true);
         mGLView.getHolder().setFormat(PixelFormat.TRANSLUCENT);
-        mGLView.setLayerType(View.LAYER_TYPE_SOFTWARE,null);
-        //.setEGLContextClientVersion(2);
+       //mGLView.setLayerType(View.LAYER_TYPE_SOFTWARE,null);
+
         //addContentView(mGLView,lp);
         fm= findViewById(R.id.mainFrameLayout);
         //fm.addView(mGLView,new ViewGroup.LayoutParams(480,480));
         mGLView.onResume();
+
         textureView =  findViewById(R.id.texture);
         textureView.setSurfaceTextureListener(textureListener);
         mCheckThread = new HandlerThread("CheckHandler");
@@ -115,6 +121,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture) {
 
+           // mGLView.getHolder().unlockCanvasAndPost(c);
           /*  Bitmap bt =  (Bitmap) textureView.getBitmap();
 
             //File folder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES));
@@ -320,4 +327,5 @@ public class MainActivity extends AppCompatActivity {
         stopBackgroundThread();
         super.onPause();
     }
+
 }
