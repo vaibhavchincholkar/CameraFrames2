@@ -29,6 +29,7 @@ import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
 import android.opengl.GLSurfaceView;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -45,11 +46,16 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
@@ -228,6 +234,10 @@ public class MainActivity extends AppCompatActivity {
                         // Use the compress method on the BitMap object to write image to the OutputStream
                         bt.compress(Bitmap.CompressFormat.JPEG, 20, fos);
                         //TODO call your async task here you could use bitmap as itor path which I am using
+                        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                        bt.compress(Bitmap.CompressFormat.JPEG,20,byteArrayOutputStream);
+                        new ClientTask().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, byteArrayOutputStream);
+
                     } catch (Exception e) {
                         e.printStackTrace();
                     } finally {
@@ -285,6 +295,40 @@ public class MainActivity extends AppCompatActivity {
         closeCamera();
         stopBackgroundThread();
         super.onPause();
+    }
+
+    private class ClientTask extends AsyncTask<ByteArrayOutputStream, Void, Void> {
+
+        private static final int PORT = 5001;
+        private static final String IP = "192.168.1.26";
+        @Override
+        protected Void doInBackground(ByteArrayOutputStream... byteArrayOutputStreams) {
+            try {
+
+                Socket socket = new Socket(InetAddress.getByName(IP), PORT);
+
+
+                ByteArrayOutputStream msgToSend = byteArrayOutputStreams[0];
+                OutputStream outputStream = socket.getOutputStream();
+                DataOutputStream dos = new DataOutputStream(outputStream);
+
+                byte[] byteArray = msgToSend.toByteArray();
+                int size = byteArray.length;
+                dos.writeInt(size);
+                //int offset = 0;
+                //while(offset<size) {
+                dos.write(byteArray, 0, size);
+                //}
+                dos.flush();
+                socket.close();
+            } catch (UnknownHostException e) {
+                Log.e(TAG, "ClientTask UnknownHostException");
+            } catch (IOException e) {
+                Log.e(TAG, "ClientTask socket IOException");
+            }
+
+            return null;
+        }
     }
 
 }
