@@ -21,6 +21,15 @@
         android:baselineAligned="false"
         android:backgroundTint="@color/colorPrimary"
         android:id="@+id/mainFrameLayout">
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Not identified"
+            android:textAlignment="center"
+            android:textSize="25sp"
+            android:textColor="@color/colorPrimary"/>
     </FrameLayout>
 
 </FrameLayout>

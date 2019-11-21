@@ -1,0 +1,41 @@
+
+{
+	"buildFiles" : 
+	[
+		"/home/vaibhav/cse622project/Androidpart/opencv-4.1.1-android-sdk/OpenCV-android-sdk/sdk/libcxx_helper/CMakeLists.txt"
+	],
+	"cleanCommands" : 
+	[
+		"/home/vaibhav/Android/Sdk/cmake/3.6.4111459/bin/cmake --build /home/vaibhav/cse622project/Androidpart/opencv-4.1.1-android-sdk/OpenCV-android-sdk/sdk/.cxx/cmake/debug/armeabi-v7a --target clean"
+	],
+	"cppFileExtensions" : [ "cpp" ],
+	"libraries" : 
+	{
+		"opencv_jni_shared-Debug-armeabi-v7a" : 
+		{
+			"abi" : "armeabi-v7a",
+			"artifactName" : "opencv_jni_shared",
+			"buildCommand" : "/home/vaibhav/Android/Sdk/cmake/3.6.4111459/bin/cmake --build /home/vaibhav/cse622project/Androidpart/opencv-4.1.1-android-sdk/OpenCV-android-sdk/sdk/.cxx/cmake/debug/armeabi-v7a --target opencv_jni_shared",
+			"buildType" : "debug",
+			"files" : 
+			[
+				
+				{
+					"flags" : "  --target=armv7-none-linux-androideabi21 --gcc-toolchain=/home/vaibhav/Android/Sdk/ndk/20.0.5594570/toolchains/llvm/prebuilt/linux-x86_64 --sysroot=/home/vaibhav/Android/Sdk/ndk/20.0.5594570/toolchains/llvm/prebuilt/linux-x86_64/sysroot    -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -fno-addrsig -march=armv7-a -mthumb -Wa,--noexecstack -Wformat -Werror=format-security   -O0 -fno-limit-debug-info  -fPIC    -c ",
+					"src" : "/home/vaibhav/cse622project/Androidpart/opencv-4.1.1-android-sdk/OpenCV-android-sdk/sdk/libcxx_helper/dummy.cpp",
+					"workingDirectory" : "/home/vaibhav/cse622project/Androidpart/opencv-4.1.1-android-sdk/OpenCV-android-sdk/sdk/.cxx/cmake/debug/armeabi-v7a"
+				}
+			],
+			"output" : "/home/vaibhav/cse622project/Androidpart/opencv-4.1.1-android-sdk/OpenCV-android-sdk/sdk/.cxx/cmake/debug/armeabi-v7a/libopencv_jni_shared.a",
+			"toolchain" : "8168230961321595200"
+		}
+	},
+	"toolchains" : 
+	{
+		"8168230961321595200" : 
+		{
+			"cCompilerExecutable" : "/home/vaibhav/Android/Sdk/ndk/20.0.5594570/toolchains/llvm/prebuilt/linux-x86_64/bin/clang",
+			"cppCompilerExecutable" : "/home/vaibhav/Android/Sdk/ndk/20.0.5594570/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++"
+		}
+	}
+}

@@ -34,6 +34,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.util.Base64;
 import android.util.Log;
 import android.util.Size;
 import android.view.Gravity;
@@ -44,24 +45,44 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import org.opencv.android.OpenCVLoader;
+import org.opencv.features2d.ORB;
+
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import org.opencv.calib3d.Calib3d;
+import org.opencv.core.*;
+import org.opencv.features2d.*;
+import org.opencv.imgcodecs.Imgcodecs;
+
 
 import static cse.buffalo.edu.R.drawable.ic_launcher_foreground;
 
 public class MainActivity extends AppCompatActivity {
+
     private TextureView textureView;
     private String cameraId;
     private Size imageDimension;
@@ -78,9 +99,11 @@ public class MainActivity extends AppCompatActivity {
     int cnt=0;
     GLSurfaceView mGLView;
     FrameLayout fm;
+    TextView detectedText;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        OpenCVLoader.initDebug();
         setContentView(R.layout.activity_main);
         mGLView = new GLSurfaceView(this);
         mGLView.setEGLConfigChooser(8,8,8,8,16,0);
@@ -89,6 +112,7 @@ public class MainActivity extends AppCompatActivity {
         mGLView.setZOrderOnTop(true);
         mGLView.getHolder().setFormat(PixelFormat.TRANSLUCENT);
         mGLView.setLayerType(View.LAYER_TYPE_SOFTWARE,null);
+        detectedText= findViewById(R.id.textView);
         //addContentView(mGLView,lp);
         //GlView will be added to fm onResume method
         fm= findViewById(R.id.mainFrameLayout);
@@ -97,6 +121,7 @@ public class MainActivity extends AppCompatActivity {
         mCheckThread = new HandlerThread("CheckHandler");
         mCheckThread.start();
         mCheckHandler = new Handler(mCheckThread.getLooper());
+
     }
 
     TextureView.SurfaceTextureListener textureListener = new TextureView.SurfaceTextureListener() {
@@ -233,10 +258,27 @@ public class MainActivity extends AppCompatActivity {
                         fos = new FileOutputStream(myFile);
                         // Use the compress method on the BitMap object to write image to the OutputStream
                         bt.compress(Bitmap.CompressFormat.JPEG, 20, fos);
+                        //Log.d("filepath",""+myFile.getAbsolutePath());
+
+                        Mat imageMatrix = Imgcodecs.imread(myFile.getAbsolutePath());
+                        ORB brisk = ORB.create();
+                        MatOfKeyPoint keypoints = new MatOfKeyPoint();
+                        Mat descriptors= new Mat();
+                        brisk.detectAndCompute(imageMatrix,new Mat(),keypoints,descriptors);
+                        Log.d("asdfgh",""+descriptors.toString());
+
+                        Log.d("asdfgh",""+new Integer(keypoints.toList().size()).toString());
+                        /**creating serializable imageFeatures object for transmission*/
+                       // byte[] store= new byte[descriptors.total()*descriptors.elemSize()];
+                       // Log.d("dsize",""+descriptors.toString());
+                      //  ImageFeatures imageFeatures= new ImageFeatures(keypoints,descriptors);
+                      //  ImageFeatures imageFeatures= new ImageFeatures(25);
+                       // new SendFeatures().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR,descriptors);
+                        /**sending imag feature done*/
                         //TODO call your async task here you could use bitmap as itor path which I am using
-                        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                        bt.compress(Bitmap.CompressFormat.JPEG,20,byteArrayOutputStream);
-                        new ClientTask().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, byteArrayOutputStream);
+                        //ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                      //  bt.compress(Bitmap.CompressFormat.JPEG,20,byteArrayOutputStream);
+                       // new ClientTask().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, byteArrayOutputStream);
 
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -297,19 +339,22 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
     }
 
-    private class ClientTask extends AsyncTask<ByteArrayOutputStream, Void, Void> {
+    private class ClientTask extends AsyncTask<ByteArrayOutputStream, Void, String> {
 
         private static final int PORT = 5001;
-        private static final String IP = "192.168.1.26";
+        private static final String IP = "192.168.1.19";
         @Override
-        protected Void doInBackground(ByteArrayOutputStream... byteArrayOutputStreams) {
+        protected String doInBackground(ByteArrayOutputStream... byteArrayOutputStreams) {
+            String detected="Processing...";
+            Socket socket = null;
             try {
 
-                Socket socket = new Socket(InetAddress.getByName(IP), PORT);
-
+                socket = new Socket(InetAddress.getByName(IP), PORT);
+                socket.setSoTimeout(10*1000);
 
                 ByteArrayOutputStream msgToSend = byteArrayOutputStreams[0];
                 OutputStream outputStream = socket.getOutputStream();
+                ObjectInputStream objReader= new ObjectInputStream(socket.getInputStream());
                 DataOutputStream dos = new DataOutputStream(outputStream);
 
                 byte[] byteArray = msgToSend.toByteArray();
@@ -320,15 +365,138 @@ public class MainActivity extends AppCompatActivity {
                 dos.write(byteArray, 0, size);
                 //}
                 dos.flush();
+               detected=(String) objReader.readObject();
+                Log.d("readline",detected);
+               // socket.close();
+            } catch (UnknownHostException e) {
+                Log.e(TAG, "ClientTask UnknownHostException");
+            } catch (IOException e) {
+
+                Log.e(TAG, "ClientTask socket IOException");
+            }
+            catch (Exception e){
+                Log.e(TAG, "general msg"+e.getMessage());
+            }
+            finally {
+                if(socket!=null) {
+                    try {
+                        socket.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            return detected;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            detectedText.setText(s);
+        }
+    }
+
+    /**Async task for sending image feature*/
+    private class SendFeatures extends AsyncTask<Mat, Void, String> {
+
+        private static final int PORT = 5001;
+        private static final String IP = "192.168.1.19";
+        @Override
+        protected String doInBackground(Mat... imageFeatures) {
+            String detected="Processing...";
+            Socket socket = null;
+            try {
+
+                socket = new Socket(InetAddress.getByName(IP), PORT);
+                socket.setSoTimeout(4*1000);
+                Mat featureToSend = imageFeatures[0];
+                ObjectOutputStream objwriter= new ObjectOutputStream(socket.getOutputStream());
+                objwriter.writeObject(featureToSend);
+                objwriter.flush();
+
+                //read from server
+                ObjectInputStream objReader= new ObjectInputStream(socket.getInputStream());
+                detected=(String) objReader.readObject();
+                Log.d("readline",detected);
                 socket.close();
             } catch (UnknownHostException e) {
                 Log.e(TAG, "ClientTask UnknownHostException");
             } catch (IOException e) {
+
                 Log.e(TAG, "ClientTask socket IOException");
             }
+            catch (Exception e){
+                Log.e(TAG, "general msg"+e.getMessage());
+            }
+            finally {
+                if(socket!=null) {
+                    try {
+                        socket.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            return detected;
+        }
 
-            return null;
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            detectedText.setText(s);
         }
     }
+    /***/
+
+    /**Serialize Mat object*/
+    public static String matToJson(Mat mat){
+        JsonObject obj = new JsonObject();
+
+        if(mat.isContinuous()){
+            int cols = mat.cols();
+            int rows = mat.rows();
+            int elemSize = (int) mat.elemSize();
+
+            byte[] data = new byte[cols * rows * elemSize];
+
+            mat.get(0, 0, data);
+
+            obj.addProperty("rows", mat.rows());
+            obj.addProperty("cols", mat.cols());
+            obj.addProperty("type", mat.type());
+
+            // We cannot set binary data to a json object, so:
+            // Encoding data byte array to Base64.
+            String dataString = new String(Base64.encode(data, Base64.DEFAULT));
+
+            obj.addProperty("data", dataString);
+
+            Gson gson = new Gson();
+            String json = gson.toJson(obj);
+
+            return json;
+        } else {
+            Log.e(TAG, "Mat not continuous.");
+        }
+        return "{}";
+    }
+
+    public static Mat matFromJson(String json){
+        JsonParser parser = new JsonParser();
+        JsonObject JsonObject = parser.parse(json).getAsJsonObject();
+
+        int rows = JsonObject.get("rows").getAsInt();
+        int cols = JsonObject.get("cols").getAsInt();
+        int type = JsonObject.get("type").getAsInt();
+
+        String dataString = JsonObject.get("data").getAsString();
+        byte[] data = Base64.decode(dataString.getBytes(), Base64.DEFAULT);
+
+        Mat mat = new Mat(rows, cols, type);
+        mat.put(0, 0, data);
+
+        return mat;
+    }
+
 
 }
