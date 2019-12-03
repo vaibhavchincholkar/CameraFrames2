@@ -72,7 +72,10 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Random;
+
 import org.opencv.calib3d.Calib3d;
 import org.opencv.core.*;
 import org.opencv.features2d.*;
@@ -82,7 +85,9 @@ import org.opencv.imgcodecs.Imgcodecs;
 import static cse.buffalo.edu.R.drawable.ic_launcher_foreground;
 
 public class MainActivity extends AppCompatActivity {
-
+    private static Double xcord=0.0;
+    private static Double ycord=0.0;
+    private static Double zcord=0.0;
     private TextureView textureView;
     private String cameraId;
     private Size imageDimension;
@@ -100,6 +105,7 @@ public class MainActivity extends AppCompatActivity {
     GLSurfaceView mGLView;
     FrameLayout fm;
     TextView detectedText;
+    private ArrayList<Double> output = null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -276,9 +282,9 @@ public class MainActivity extends AppCompatActivity {
                        // new SendFeatures().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR,descriptors);
                         /**sending imag feature done*/
                         //TODO call your async task here you could use bitmap as itor path which I am using
-                        //ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                      //  bt.compress(Bitmap.CompressFormat.JPEG,20,byteArrayOutputStream);
-                       // new ClientTask().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, byteArrayOutputStream);
+                        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                        bt.compress(Bitmap.CompressFormat.JPEG,20,byteArrayOutputStream);
+                        new ClientTask().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, byteArrayOutputStream);
 
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -338,10 +344,18 @@ public class MainActivity extends AppCompatActivity {
         stopBackgroundThread();
         super.onPause();
     }
-
+    public static double getXcord(){
+        return xcord;
+    }
+    public static double getYcord(){
+        return ycord;
+    }
+    public static double getZcord(){
+        return zcord;
+    }
     private class ClientTask extends AsyncTask<ByteArrayOutputStream, Void, String> {
 
-        private static final int PORT = 5001;
+        private static final int PORT = 5002;
         private static final String IP = "192.168.1.19";
         @Override
         protected String doInBackground(ByteArrayOutputStream... byteArrayOutputStreams) {
@@ -349,24 +363,34 @@ public class MainActivity extends AppCompatActivity {
             Socket socket = null;
             try {
 
-                socket = new Socket(InetAddress.getByName(IP), PORT);
-                socket.setSoTimeout(10*1000);
-
                 ByteArrayOutputStream msgToSend = byteArrayOutputStreams[0];
-                OutputStream outputStream = socket.getOutputStream();
-                ObjectInputStream objReader= new ObjectInputStream(socket.getInputStream());
-                DataOutputStream dos = new DataOutputStream(outputStream);
-
                 byte[] byteArray = msgToSend.toByteArray();
                 int size = byteArray.length;
+                                                                
+                Log.d("imageSize",new Integer(size).toString());
+
+                socket = new Socket(InetAddress.getByName(IP), PORT);
+                OutputStream outputStream = socket.getOutputStream();
+
+                DataOutputStream dos = new DataOutputStream(outputStream);
                 dos.writeInt(size);
                 //int offset = 0;
                 //while(offset<size) {
                 dos.write(byteArray, 0, size);
                 //}
                 dos.flush();
-               detected=(String) objReader.readObject();
-                Log.d("readline",detected);
+                ObjectInputStream objReader= new ObjectInputStream(socket.getInputStream());
+                output = (ArrayList<Double>)objReader.readObject();
+                if(output!=null){
+                    xcord=output.get(3);
+                    ycord=output.get(7);
+                    zcord=output.get(11);
+                }
+                dos.writeUTF("ACK");
+                 Log.d("serveroutput",output.toString());
+
+              // detected=(String) objReader.readObject();
+                //Log.d("readline",detected);
                // socket.close();
             } catch (UnknownHostException e) {
                 Log.e(TAG, "ClientTask UnknownHostException");

@@ -62,7 +62,7 @@ public class ObjectDrawer {
 
         float[] vertex = new float[vertices.size()];
         for(int i=0;i<vertices.size();i++){
-            vertex[i]=vertices.get(i)*10; //we need to multiply by a factor to get correct size of the object
+            vertex[i]= (float) (vertices.get(i)*0.1); //we need to multiply by a factor to get correct size of the object
         }
         float[] verTexture = new float[vertexTextures.size()];
         for(int i=0;i<vertexTextures.size();i++){
@@ -89,25 +89,51 @@ public class ObjectDrawer {
         // Enable depth testing
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
         // Position the eye in front of the origin.
+        /**
+         * The eye, or the position of the viewer;
+         *
+         * The center, or the point where we the camera aims;
+         *
+         * The up, which defines the direction of the up for the viewer.
+         *
+         * The defaults in OpenGL are: the eye at (0, 0, -1); the center at
+         * (0, 0, 0) and the up is given by the positive direction of the Oy axis (0, 1, 0).*/
         final float eyeX = 0.0f;
-        final float eyeY = 10.0f;
-        //for NP
-        // final float eyeZ = 120.5f;
-        final float eyeZ = -0.5f;
+        final float eyeY = 0.0f;
+        final float eyeZ = -2.0f;
+
         // We are looking toward the distance
         final float lookX = 0.0f;
         final float lookY = 0.0f;
-        final float lookZ = -5.0f;
+        final float lookZ = 0.0f;
 
         // Set our up vector. This is where our head would be pointing were we holding the camera.
         final float upX = 0.0f;
         final float upY = 1.0f;
-        final float upZ = 5.0f;
+        final float upZ = 0.0f;
+
+     /*  final float eyeX = 0.99f;
+        final float eyeY = 0.02f;
+        final float eyeZ = -0.110f;
+
+        // We are looking toward the distance
+        final float lookX = -0.022f;
+        final float lookY = 0.99f;
+        final float lookZ = -0.036f;
+
+        // Set our up vector. This is where our head would be pointing were we holding the camera.
+        final float upX = -0.111f;
+        final float upY = 0.033f;
+        final float upZ = 0.99f;*/
 
         // Set the view matrix. This matrix can be said to represent the camera position.
         // NOTE: In OpenGL 1, a ModelView matrix is used, which is a combination of a model and
         // view matrix. In OpenGL 2, we can keep track of these matrices separately if we choose.
         Matrix.setLookAtM(mViewMatrix, 0, eyeX, eyeY, eyeZ, lookX, lookY, lookZ, upX, upY, upZ);
+      /*  mViewMatrix= new float[]{0.99f, 0.02f, 0.110f, 0.94f,
+                                -0.022f, 0.99f, -0.036f, 0.63f,
+                                -0.111f, 0.033f, 0.9f, -6.277f,
+                                0, 0, 0, 1.0f};*/
         final String vertexShader = getVertexShader();
         final String fragmentShader = getFragmentShader();
         final int vertexShaderHandle = ShaderHelper.compileShader(GLES20.GL_VERTEX_SHADER, vertexShader);
@@ -124,13 +150,20 @@ public class ObjectDrawer {
         GLES20.glViewport(0, 0, width, height);
         // Create a new perspective projection matrix. The height will stay the same
         // while the width will vary as per aspect ratio.
+        /**
+         * viewing angle or field of view (usually abbreviated as FOV);
+         *
+         * aspect
+         *
+         * near and far
+         * */
         final float ratio = (float) width / height;
         final float left = -ratio;
         final float right = ratio;
         final float bottom = -1.0f;
         final float top = 1.0f;
         final float near = 1.0f;
-        final float far = 160.0f;
+        final float far = 1000.0f;
         Matrix.frustumM(mProjectionMatrix, 0, left, right, bottom, top, near, far);
     }
 
@@ -153,7 +186,22 @@ public class ObjectDrawer {
         GLES20.glUniform1i(mTextureUniformHandle, 0);
         // Draw some cubes.
         Matrix.setIdentityM(mModelMatrix, 0);
-        Matrix.translateM(mModelMatrix, 0, 0.0f, -40.0f, -7.0f);
+        float x=0;
+        x=(float) MainActivity.getXcord();
+        float y= 0;
+        y=(float)MainActivity.getYcord();
+        float z= 0;
+        z=(float)MainActivity.getZcord();
+       // Matrix.translateM(mModelMatrix, 0, 1.0f,2.0f , 0.0f);
+        Log.d("X and Y translation"," "+x+" "+y);
+        Matrix.translateM(mModelMatrix, 0, x,y , z);
+       // Matrix.translateM(mModelMatrix, 0, 823.8324277422465f,-978.3378398992778f , 0.0f);
+        float[] rec= new float[]{-0.9627986438848656f, -0.01570760665841914f, 0.2697629374590367f, 1227.69832379624f,
+                0.1288086509577005f, -0.9042681096959586f, 0.4070718821355203f, -968.8779629127691f,
+                0.2375438965158251f, 0.4266760561362237f, 0.8726513853470451f, -1171.441600292768f,
+                0, 0, 0, 1};
+       // Matrix.multiplyMM(mModelMatrix, 0, mModelMatrix, 0, rec, 0);
+
         Matrix.rotateM(mModelMatrix, 0,  angleInDegrees, 1.0f, 1.0f, 0.0f);
         drawCube();
     }
